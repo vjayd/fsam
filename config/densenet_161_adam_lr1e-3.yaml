@@ -1,0 +1,44 @@
+#output_dir: '/content/drive/MyDrive/preprocess/experiments1/output'
+#log_dir: '/content/drive/MyDrive/preprocess/experiments1/log'
+output_dir: 'experiments/output'
+log_dir: 'experiments/log'
+
+device: 'cuda:0'
+dataset:
+  trainroot: ''
+  name: 'anti-spoof'
+  root: './'
+  augmentation:
+    horizontal_flip: True
+    vertial_flip: False
+    rotation: 10
+  train_data: '/media/vijay/1TB/FACE_ANTI-SPOOFING/antispoof_data/final_data/CelebA_Spoof/Data/train_preprocess_jan25_1pm'
+  test_data: '/media/vijay/1TB/FACE_ANTI-SPOOFING/antispoof_data/final_data/CelebA_Spoof/Data/train_preprocess_jan25_1pm'
+#  train_data: './train_preprocess_jan25_1pm'
+#  test_data: './test_preprocess_jan25_1pm'
+  # train_set: 'trainpre_jan25_1pm.csv'
+  # test_set: 'testpre_jan25_1pm.csv'
+  train_set: 'trainsystem.csv'
+  test_set: 'testsystem.csv'
+  mean: [0.5,0.5,0.5]
+  sigma: [0.5,0.5,0.5]
+
+model:
+  base: 'resnet_18'
+  pretrained: True
+  num_output: 2
+  image_size: [224,224]
+  map_size: 256
+  smoothing: True
+
+train:
+  batch_size: 50
+  optimizer: 'adam'
+  lr: 0.001
+  num_epochs: 100
+  loss:
+    beta: 0.5
+
+test:
+  batch_size: 50
+  score_type: 'pixel' # types = (pixel, binary, combined)
