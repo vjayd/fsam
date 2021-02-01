@@ -49,10 +49,10 @@ class ResnetDataset(Dataset):
         img_name = os.path.join(self.root_dir, img_name)
         img = Image.open(img_name)
         
-        print('')
+       
 
-        label = self.data.iloc[index, 1]
-        
+        label = self.data.iloc[index, 1].astype(np.float32)
+        label = np.expand_dims(label, axis=0)
         if label == 1:
             mask = np.ones((self.map_size), dtype=np.float32) 
         else:

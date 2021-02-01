@@ -13,18 +13,18 @@ dataset:
     vertial_flip: False
     rotation: 10
   train_data: '/media/vijay/1TB/FACE_ANTI-SPOOFING/antispoof_data/final_data/CelebA_Spoof/Data/train_preprocess_jan25_1pm'
-  test_data: '/media/vijay/1TB/FACE_ANTI-SPOOFING/antispoof_data/final_data/CelebA_Spoof/Data/train_preprocess_jan25_1pm'
+  test_data: '/media/vijay/1TB/FACE_ANTI-SPOOFING/antispoof_data/final_data/CelebA_Spoof/Data/test_preprocess_jan25_1pm'
 #  train_data: './train_preprocess_jan25_1pm'
 #  test_data: './test_preprocess_jan25_1pm'
-  # train_set: 'trainpre_jan25_1pm.csv'
-  # test_set: 'testpre_jan25_1pm.csv'
-  train_set: 'trainsystem.csv'
-  test_set: 'testsystem.csv'
+  train_set: 'trainpre_jan25_1pm.csv'
+  test_set: 'testpre_jan25_1pm.csv'
+  # train_set: 'trainsystem.csv'
+  # test_set: 'testsystem.csv'
   mean: [0.5,0.5,0.5]
   sigma: [0.5,0.5,0.5]
 
 model:
-  base: 'resnet_18'
+  base: 'facenet'
   pretrained: True
   num_output: 2
   image_size: [224,224]
@@ -32,7 +32,7 @@ model:
   smoothing: True
 
 train:
-  batch_size: 50
+  batch_size: 5
   optimizer: 'adam'
   lr: 0.001
   num_epochs: 100
@@ -40,5 +40,5 @@ train:
     beta: 0.5
 
 test:
-  batch_size: 50
+  batch_size: 5
   score_type: 'pixel' # types = (pixel, binary, combined)

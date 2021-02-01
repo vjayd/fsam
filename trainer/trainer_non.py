@@ -76,7 +76,7 @@ class Trainer_Resnet(BaseTrainer):
             img, label, mask = img.to(self.device),  label.to(self.device), mask.to(self.device)
             net_label = self.network(img)
             self.optimizer.zero_grad()
-            loss = self.loss(net_label, mask)
+            loss = self.loss(net_label, label)
             loss.backward()
             self.optimizer.step()
             
@@ -117,17 +117,36 @@ class Trainer_Resnet(BaseTrainer):
 #        precision =  tp/(tp+fp) #The proportion of 
 #        recall =  tp/(tp+fn)
 #        print('Precision ', precision, 'Recall ', recall)
-        print('Epoch: {}, iter: {}, loss: {}, acc: {}'.format(epoch, 0, self.train_loss_metric.avg, self.train_acc_metric.avg))
+            print('1st iteration')
+        n_live = total-spoof
+        n_spoof = spoof
+        fn = n_spoof - tp
+        fp = n_live - tn
+        apcer = fn/n_spoof   #attack presentation classification error rates
+        bpcer = fp/n_live 
+        acer = (apcer+ bpcer) /2   #average classification error rate
+        precision =  tp/(tp+fp) 
+        recall =  tp/(tp+fn)
+        
+        
+        print('Total live images : {},  Total spoof images : {}'.format(n_live, spoof))
+        print('True positive :',tp, ' False positive :', fp, 'False Negative :', fn, 'True negative :', tn)
+        print('APCER : {}, BPCER : {}, ACER :{}, Precision :{}, Recall :{} '.format(apcer, bpcer, acer, precision, recall))
+        print('Accuracy of the network on the test images: %d %%' % (
+            100 * correct / total))
+
+
+       # print('Epoch: {}, iter: {}, loss: {}, acc: {}'.format(epoch, 0, self.train_loss_metric.avg, self.train_acc_metric.avg))
 
 
     def train(self):
 
         for epoch in range(self.cfg['train']['num_epochs']):
             saved_name = os.path.join(self.cfg['output_dir'], '{}_{}.pth'.format(self.cfg['model']['base'], self.cfg['dataset']['name']))
-            if os.path.exists(saved_name):
-                self.load_model()
-            self.train_one_epoch(epoch)
-            self.save_model(epoch)
+            # if os.path.exists(saved_name):
+            #     self.load_model()
+            # self.train_one_epoch(epoch)
+            # self.save_model(epoch)
             epoch_acc = self.validate(epoch)
             print(epoch_acc)
             # if epoch_acc > self.best_val_acc:
@@ -151,24 +170,24 @@ class Trainer_Resnet(BaseTrainer):
         for i, (img, label, mask) in enumerate(self.testloader):
             img, label, mask = img.to(self.device), label.to(self.device), mask.to(self.device)
             net_label = self.network(img)
-            loss = self.loss( net_label,  mask)
+            loss = self.loss( net_label,  label)
             
             ##################################################
-            threshold = 0.5
-            net_label = net_label.cpu().detach().numpy()
+            # threshold = 0.5
+            # net_label = net_label.cpu().detach().numpy()
             
-            binary = np.where(net_label <=threshold, 0, 1)
-            bi = np.sum(binary, axis = 1)
-            bi2 = np.where(bi<=128,0,1)
-            net_label2 = bi2
+            # binary = np.where(net_label <=threshold, 0, 1)
+            # bi = np.sum(binary, axis = 1)
+            # bi2 = np.where(bi<=128,0,1)
+            # net_label2 = bi2
             #print(binary)
 
 
 
              ################################################
             spoof+=label.sum().item()
-           # _, predicted = np.max(net_label2.data, 1)
-            predicted = net_label2 
+            binary = np.where(net_label.detach().cpu().numpy()<=0.5, 0, 1)
+            predicted = binary
             total += label.size(0)
             label = label.detach().cpu().numpy()
             correct += (predicted == label).sum().item()
@@ -210,7 +229,7 @@ class Trainer_Resnet(BaseTrainer):
             
 #            if i == seed:
 #                add_images_tb(self.cfg, epoch, img, preds, targets, score, self.writer)
-
+            print('test 1st iteration')
             
         n_live = total-spoof
         n_spoof = spoof
