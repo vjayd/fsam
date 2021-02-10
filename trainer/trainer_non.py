@@ -14,6 +14,7 @@ from trainer.base import BaseTrainer
 from utils.meters import AverageMeter
 from utils.eval import predict, calc_acc, add_images_tb
 import numpy as np
+from facenet_pytorch import MTCNN, InceptionResnetV1
 
 class Trainer_Resnet(BaseTrainer):
     def __init__(self, cfg, network, optimizer, loss, lr_scheduler, device, trainloader, testloader, writer):
@@ -74,7 +75,16 @@ class Trainer_Resnet(BaseTrainer):
         
         for i, (img, label, mask) in enumerate(self.trainloader):
             img, label, mask = img.to(self.device),  label.to(self.device), mask.to(self.device)
-            net_label = self.network(img)
+            
+            #print('Training : ', img.shape)
+            
+            resnet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
+            
+            img_embedding = resnet(img)
+            
+            
+            net_label = self.network(img_embedding)
+            
             self.optimizer.zero_grad()
             loss = self.loss(net_label, label)
             loss.backward()
@@ -109,10 +119,9 @@ class Trainer_Resnet(BaseTrainer):
             # Calculate predictions
             #preds, _ = predict(net_mask, net_label, score_type=self.cfg['test']['score_type'])
             #targets, _ = predict(mask, label, score_type=self.cfg['test']['score_type'])
-            acc = calc_acc(predicted, label)
+            #acc = calc_acc(predicted, label)
             # Update metrics
-            self.train_loss_metric.update(loss.item())
-            self.train_acc_metric.update(acc)
+            #f.train_acc_metric.update(acc)
             #break
 #        print('Total live images ',(total-spoof),' : Total spoof images ',spoof)
 #        print('Accuracy of the network on the train images: %d %%' % (
@@ -146,10 +155,10 @@ class Trainer_Resnet(BaseTrainer):
 
         for epoch in range(self.cfg['train']['num_epochs']):
             saved_name = os.path.join(self.cfg['output_dir'], '{}_{}.pth'.format(self.cfg['model']['base'], self.cfg['dataset']['name']))
-            if os.path.exists(saved_name):
-                self.load_model()
-            self.train_one_epoch(epoch)
-            self.save_model(epoch)
+            # if os.path.exists(saved_name):
+            #     self.load_model()
+            # self.train_one_epoch(epoch)
+            # self.save_model(epoch)
             epoch_acc = self.validate(epoch)
             print(epoch_acc)
             # if epoch_acc > self.best_val_acc:
@@ -172,7 +181,12 @@ class Trainer_Resnet(BaseTrainer):
         
         for i, (img, label, mask) in enumerate(self.testloader):
             img, label, mask = img.to(self.device), label.to(self.device), mask.to(self.device)
-            net_label = self.network(img)
+            resnet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
+            
+            img_embedding = resnet(img)
+            
+            
+            net_label = self.network(img_embedding)
             loss = self.loss( net_label,  label)
             
             ##################################################

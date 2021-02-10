@@ -25,21 +25,21 @@ loss = CrossEntloss()
 
 writer = SummaryWriter(cfg['log_dir'])
 
-dump_input = torch.randn(1,3,224,224)
+# dump_input = torch.randn(1,3,224,224)
 
-writer.add_graph(network, (dump_input, ))
+# writer.add_graph(network, (dump_input, ))
 
 # Without Resize transform, images are of different sizes and it causes an error
 train_transform = transforms.Compose([
     #transforms.Resize(cfg['model']['image_size']),
-    transforms.RandomRotation(cfg['dataset']['augmentation']['rotation']),
-    transforms.RandomHorizontalFlip(),
+   # transforms.RandomRotation(cfg['dataset']['augmentation']['rotation']),
+    #transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     transforms.Normalize(cfg['dataset']['mean'], cfg['dataset']['sigma'])
 ])
 
 test_transform = transforms.Compose([
-    #transforms.Resize(cfg['model']['image_size']),
+   # transforms.Resize(cfg['model']['image_size']),
     transforms.ToTensor(),
     transforms.Normalize(cfg['dataset']['mean'], cfg['dataset']['sigma'])
 ])
@@ -64,14 +64,14 @@ trainloader = torch.utils.data.DataLoader(
     dataset=trainset,
     batch_size=cfg['train']['batch_size'],
     shuffle=True,
-    num_workers=0
+    num_workers=8
 )
 
 testloader = torch.utils.data.DataLoader(
     dataset=testset,
     batch_size=cfg['test']['batch_size'],
     shuffle=True,
-    num_workers=0
+    num_workers=8
 )
 
 trainer = Trainer_Resnet(

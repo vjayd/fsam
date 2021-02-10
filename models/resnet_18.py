@@ -48,30 +48,24 @@ class Facenet(nn.Module):
 
     def __init__(self):
         super(Facenet, self).__init__()
-        resnet =  InceptionResnetV1(
-                    classify=True,
-                    pretrained='vggface2'
-                    
-                    )
-        features = list(resnet.children())
-        self.convmodel = nn.Sequential(*features[:-3])
+        
         self.classi = nn.Sequential(
-                      nn.Linear(1792, 1024),  
-                      nn.ReLU(), 
-                      nn.Dropout(0.3),
-                      nn.Linear(1024, 512),  
-                      nn.ReLU(), 
-                      nn.Dropout(0.3),
                       nn.Linear(512, 256),  
                       nn.ReLU(), 
                       nn.Dropout(0.3),
-                      nn.Linear(256, 1),
+                      nn.Linear(256, 128),  
+                      nn.ReLU(), 
+                      nn.Dropout(0.3),
+                      nn.Linear(128,32),  
+                      nn.ReLU(), 
+                      nn.Dropout(0.3),
+                      nn.Linear(32, 1),
                       nn.Sigmoid())
        
         
     def forward(self, x):
-        embedding = self.convmodel(x)
-        classi = self.classi(embedding.view(-1, 1792))
+        
+        classi = self.classi(x)
         return classi
 
 
