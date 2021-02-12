@@ -2,7 +2,7 @@ import yaml
 import torch
 from torch import optim
 from models.densenet_161 import DeepPixBis
-from models.resnet_18 import Resnet_18, Resnet_152, Densenet_201, Facenet
+from models.resnet_18 import Resnet_18, Resnet_152, Densenet_201, Facenet, Ycbcr
 
 
 def read_cfg(cfg_file):
@@ -72,6 +72,8 @@ def build_network(cfg):
         network = Densenet_201(pretrained=cfg['model']['pretrained'])
     elif cfg['model']['base'] == 'facenet':
         network = Facenet()
+    elif cfg['model']['base'] == 'ycbcrnet':
+        network = Ycbcr()
     else:
         raise NotImplementedError
 

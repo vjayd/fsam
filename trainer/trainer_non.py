@@ -73,20 +73,20 @@ class Trainer_Resnet(BaseTrainer):
         pytorch_total_params = sum(p.numel() for p in self.network.parameters() if p.requires_grad)
         print(pytorch_total_params) 
         
-        for i, (img, label, mask) in enumerate(self.trainloader):
-            img, label, mask = img.to(self.device),  label.to(self.device), mask.to(self.device)
+        for i, (img, label, mask, feature) in enumerate(self.trainloader):
+            img, label, mask, feature = img.to(self.device),  label.to(self.device), mask.to(self.device), feature.to(self.device)
             
             #print('Training : ', img.shape)
             
-            resnet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
+            # resnet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
             
-            img_embedding = resnet(img)
+            # img_embedding = resnet(img)
             
-            
-            net_label = self.network(img_embedding)
+           # print(feature.shape)
+            net_feature, net_label = self.network(img)
             
             self.optimizer.zero_grad()
-            loss = self.loss(net_label, label)
+            loss = self.loss(net_label, label, net_feature, feature)
             loss.backward()
             self.optimizer.step()
             
@@ -155,10 +155,10 @@ class Trainer_Resnet(BaseTrainer):
 
         for epoch in range(self.cfg['train']['num_epochs']):
             saved_name = os.path.join(self.cfg['output_dir'], '{}_{}.pth'.format(self.cfg['model']['base'], self.cfg['dataset']['name']))
-            # if os.path.exists(saved_name):
-            #     self.load_model()
-            # self.train_one_epoch(epoch)
-            # self.save_model(epoch)
+            if os.path.exists(saved_name):
+                self.load_model()
+            #self.train_one_epoch(epoch)
+            #self.save_model(epoch)
             epoch_acc = self.validate(epoch)
             print(epoch_acc)
             # if epoch_acc > self.best_val_acc:
@@ -179,15 +179,17 @@ class Trainer_Resnet(BaseTrainer):
         tp , fp, tn, fn = 0, 0, 0, 0
         spoof = 0
         
-        for i, (img, label, mask) in enumerate(self.testloader):
-            img, label, mask = img.to(self.device), label.to(self.device), mask.to(self.device)
-            resnet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
+        for i, (img, label, mask, feature) in enumerate(self.trainloader):
+            img, label, mask, feature = img.to(self.device),  label.to(self.device), mask.to(self.device), feature.to(self.device)
             
-            img_embedding = resnet(img)
+            #print('Training : ', img.shape)
             
+            # resnet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
             
-            net_label = self.network(img_embedding)
-            loss = self.loss( net_label,  label)
+            # img_embedding = resnet(img)
+            
+            #print(feature.shape)
+            net_feature, net_label = self.network(img)
             
             ##################################################
             # threshold = 0.5

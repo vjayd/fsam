@@ -34,10 +34,25 @@ class CrossEntloss(nn.Module):
 
     
     def forward(self, net_label, target_label):
-        # https://gitlab.idiap.ch/bob/bob.paper.deep_pix_bis_pad.icb2019/blob/master/bob/paper/deep_pix_bis_pad/icb2019/config/cnn_trainer_config/oulu_deep_pixbis.py
-        # Target should be the first arguments, otherwise "RuntimeError: the derivative for 'target' is not implemented"
-        
+         
         loss_ce = self.criterion1(net_label, target_label)
 
         loss = loss_ce
+        return loss
+    
+    
+class Ycbcrloss(nn.Module):
+   
+    def __init__(self):
+        super().__init__()
+        self.criterion1 = nn.MSELoss()
+        self.criterion2 = nn.BCELoss()
+
+    
+    def forward(self, net_label, target_label, net_feature, target_feature):
+          
+        loss_mse = self.criterion1(net_feature, target_feature)
+        loss_bce = self.criterion2(net_label, target_label)
+
+        loss = 0.5*loss_mse + 0.5*loss_bce
         return loss

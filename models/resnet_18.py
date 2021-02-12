@@ -40,7 +40,41 @@ class Resnet_18(nn.Module):
         
         return op
 
+class Ycbcr(nn.Module):
+    """
+    The class defining Deep Pixel-wise Binary Supervision for Face Presentation Attack
+    """
 
+    def __init__(self, pretrained=True):
+        super(Ycbcr, self).__init__()
+        resnet = models.resnet18(pretrained=pretrained)
+        features = list(resnet.children())
+        self.backbone1 = nn.Sequential(*features[0:9])
+        
+        self.backbone2 = nn.Sequential(
+                      nn.Linear(512, 256),  
+                      nn.ReLU(), 
+                      nn.Dropout(0.3),
+                      nn.Linear(256, 177))
+        
+        self.feature_vec = nn.Sequential(
+                      nn.Linear(177, 177),  
+                      nn.Sigmoid())
+        
+        self.classi = nn.Sequential(
+                      nn.Linear(177, 1),
+                      nn.Sigmoid())
+       
+    def forward(self, x):
+        bb = self.backbone1(x)
+        op = self.backbone2(bb.view(-1, 512))
+        
+        feature = self.feature_vec(op)
+        classi = self.classi(op)
+        
+        return feature, classi
+    
+    
 class Facenet(nn.Module):
     """
     The class defining Deep Pixel-wise Binary Supervision for Face Presentation Attack

@@ -3,7 +3,7 @@ import torch
 from torchvision import transforms, datasets
 from trainer.trainer_non import Trainer_Resnet
 from torch.utils.tensorboard import SummaryWriter
-from models.loss import PixWiseBCELoss, CrossEntloss
+from models.loss import PixWiseBCELoss, Ycbcrloss
 from datasets.PixWiseDataset import PixWiseDataset
 from datasets.ResnetDataset import ResnetDataset
 from utils.utils import read_cfg, get_optimizer, build_network, get_device
@@ -21,7 +21,7 @@ network = build_network(cfg)
 optimizer = get_optimizer(cfg, network)
 
 #loss = PixWiseBCELoss(beta=cfg['train']['loss']['beta'])
-loss = CrossEntloss()
+loss = Ycbcrloss()
 
 writer = SummaryWriter(cfg['log_dir'])
 
