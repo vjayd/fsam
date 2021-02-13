@@ -56,15 +56,7 @@ class Trainer_Resnet(BaseTrainer):
         self.network.train()
         self.train_loss_metric.reset(epoch)
         self.train_acc_metric.reset(epoch)
-        #saved_name = os.path.join(self.cfg['output_dir'], '{}_{}.pth'.format(self.cfg['model']['base'], self.cfg['dataset']['name']))
-
-#        if os.path.exists(saved_name):
-#            checkpoint = torch.load(saved_name)
-#            self.network.load_state_dict(checkpoint['state_dict'])
-#            self.optimizer.load_state_dict(checkpoint['optimizer'])
-#            epoch_stored = checkpoint['epoch']
-#            print('Recent epoch ',epoch_stored)
-                
+                 
         correct = 0
         total = 0
         tp , fp, tn, fn = 0, 0, 0, 0
@@ -75,14 +67,15 @@ class Trainer_Resnet(BaseTrainer):
         
         for i, (img, label, mask, feature) in enumerate(self.trainloader):
             img, label, mask, feature = img.to(self.device),  label.to(self.device), mask.to(self.device), feature.to(self.device)
+            '''
+            For Facenet pretrained model
             
-            #print('Training : ', img.shape)
+            print('Training : ', img.shape)
+            resnet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
+            img_embedding = resnet(img)
+            print(feature.shape)
+            '''
             
-            # resnet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
-            
-            # img_embedding = resnet(img)
-            
-           # print(feature.shape)
             net_feature, net_label = self.network(img)
             
             self.optimizer.zero_grad()
@@ -93,11 +86,6 @@ class Trainer_Resnet(BaseTrainer):
             spoof+=label.sum().item()
             ################################################
             
-            
-            
-            
-            ################################################
-            spoof+=label.sum().item()
             binary = np.where(net_label.detach().cpu().numpy()<=0.5, 0, 1)
             predicted = binary
             total += label.size(0)
@@ -112,58 +100,48 @@ class Trainer_Resnet(BaseTrainer):
             neg=(~pos)
             keep=(label==0)
             tp+=(true*pos).sum().item()
-            # fp+=(false*pos*keep).sum().item()
-            # fn+=(false*neg*keep).sum().item()
+            
             tn+=(true*neg).sum().item()
             
-            # Calculate predictions
-            #preds, _ = predict(net_mask, net_label, score_type=self.cfg['test']['score_type'])
-            #targets, _ = predict(mask, label, score_type=self.cfg['test']['score_type'])
-            #acc = calc_acc(predicted, label)
-            # Update metrics
-            #f.train_acc_metric.update(acc)
-            #break
-#        print('Total live images ',(total-spoof),' : Total spoof images ',spoof)
-#        print('Accuracy of the network on the train images: %d %%' % (
-#            100 * correct / total))
-#        precision =  tp/(tp+fp) #The proportion of 
-#        recall =  tp/(tp+fn)
-#        print('Precision ', precision, 'Recall ', recall)
-            #print('1st iteration')
+            
         n_live = total-spoof
         n_spoof = spoof
         fn = n_spoof - tp
         fp = n_live - tn
         apcer = fn/n_spoof   #attack presentation classification error rates
         bpcer = fp/n_live 
-        acer = (apcer+ bpcer) /2   #average classification error rate
-        precision =  tp/(tp+fp) 
-        recall =  tp/(tp+fn)
+        # acer = (apcer+ bpcer) /2   #average classification error rate
+        # precision =  tp/(tp+fp) 
+        # recall =  tp/(tp+fn)
         
         
         print('Total live images : {},  Total spoof images : {}'.format(n_live, spoof))
-        # print('True positive :',tp, ' False positive :', fp, 'False Negative :', fn, 'True negative :', tn)
-        # print('APCER : {}, BPCER : {}, ACER :{}, Precision :{}, Recall :{} '.format(apcer, bpcer, acer, precision, recall))
-        print('Accuracy of the network on the train images: %d %%' % (
-            100 * correct / total))
+        print('Accuracy of the network on the train images: %d %%' % (100 * correct / total))
 
 
-       # print('Epoch: {}, iter: {}, loss: {}, acc: {}'.format(epoch, 0, self.train_loss_metric.avg, self.train_acc_metric.avg))
-
+       
 
     def train(self):
+        '''
+        Train code to train and test on the validation set
+
+        Returns
+        -------
+        None.
+
+        '''
 
         for epoch in range(self.cfg['train']['num_epochs']):
             saved_name = os.path.join(self.cfg['output_dir'], '{}_{}.pth'.format(self.cfg['model']['base'], self.cfg['dataset']['name']))
             if os.path.exists(saved_name):
                 self.load_model()
-            #self.train_one_epoch(epoch)
-            #self.save_model(epoch)
+            self.train_one_epoch(epoch)
+            # self.save_model(epoch)
             epoch_acc = self.validate(epoch)
-            print(epoch_acc)
-            # if epoch_acc > self.best_val_acc:
-            #     self.best_val_acc = epoch_acc
-            #self.save_model(epoch)
+            
+            if epoch_acc > self.best_val_acc:
+                self.best_val_acc = epoch_acc
+                self.save_model(epoch)
 
 
     def validate(self, epoch):
@@ -182,28 +160,9 @@ class Trainer_Resnet(BaseTrainer):
         for i, (img, label, mask, feature) in enumerate(self.trainloader):
             img, label, mask, feature = img.to(self.device),  label.to(self.device), mask.to(self.device), feature.to(self.device)
             
-            #print('Training : ', img.shape)
             
-            # resnet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
-            
-            # img_embedding = resnet(img)
-            
-            #print(feature.shape)
             net_feature, net_label = self.network(img)
-            
-            ##################################################
-            # threshold = 0.5
-            # net_label = net_label.cpu().detach().numpy()
-            
-            # binary = np.where(net_label <=threshold, 0, 1)
-            # bi = np.sum(binary, axis = 1)
-            # bi2 = np.where(bi<=128,0,1)
-            # net_label2 = bi2
-            #print(binary)
-
-
-
-             ################################################
+            ################################################
             spoof+=label.sum().item()
             binary = np.where(net_label.detach().cpu().numpy()<=0.5, 0, 1)
             predicted = binary
@@ -219,36 +178,9 @@ class Trainer_Resnet(BaseTrainer):
             neg=(~pos)
             keep=(label==0)
             tp+=(true*pos).sum().item()
-            # fp+=(false*pos*keep).sum().item()
-            # fn+=(false*neg*keep).sum().item()
             tn+=(true*neg).sum().item()
             
-            # Calculate predictions
-            #preds, _ = predict(net_mask, net_label, score_type=self.cfg['test']['score_type'])
-            #targets, _ = predict(mask, label, score_type=self.cfg['test']['score_type'])
-#            acc = calc_acc(predicted, label)
-            # Update metrics
-            # self.train_loss_metric.update(loss.item())
-            # self.train_acc_metric.update(acc)
-
-
-
-
-
-
-
-            # Calculate predictions
-#            preds, score = predict(net_mask, net_label, score_type=self.cfg['test']['score_type'])
-#            targets, _ = predict(mask, label, score_type=self.cfg['test']['score_type'])
-            #acc = calc_acc(predicted, label)
-            # Update metrics
-            # self.val_loss_metric.update(loss.item())
-            # self.val_acc_metric.update(acc)
             
-            
-#            if i == seed:
-#                add_images_tb(self.cfg, epoch, img, preds, targets, score, self.writer)
-            #print('test 1st iteration')
             
         n_live = total-spoof
         n_spoof = spoof
@@ -260,16 +192,14 @@ class Trainer_Resnet(BaseTrainer):
         precision =  tp/(tp+fp) 
         recall =  tp/(tp+fn)
         
-        
+        acc = 100 * correct / total
         print('Total live images : {},  Total spoof images : {}'.format(n_live, spoof))
         print('True positive :',tp, ' False positive :', fp, 'False Negative :', fn, 'True negative :', tn)
         print('APCER : {}, BPCER : {}, ACER :{}, Precision :{}, Recall :{} '.format(apcer, bpcer, acer, precision, recall))
-        print('Accuracy of the network on the test images: %d %%' % (
-            100 * correct / total))
+        print('Accuracy of the network on the test images: %d %%' % (acc))
         
        
-       #print('Epoch: {}, iter: {}, loss: {}, acc: {}'.format(epoch, 0, self.train_loss_metric.avg, self.train_acc_metric.avg))
-
+       
             
             
-        return self.val_acc_metric.avg
+        return 

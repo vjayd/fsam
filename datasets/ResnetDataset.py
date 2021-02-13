@@ -16,7 +16,7 @@ from torchvision import transforms
 from skimage import feature as skif
 
 class ResnetDataset(Dataset):
-    """ A data loader for Pixel Wise Deep Supervision PAD where samples are organized in this way
+    """ A data loader for Face anti-spoofing
 
     Args:
         root_dir (string): Root directory path
@@ -62,14 +62,14 @@ class ResnetDataset(Dataset):
         y_h = self.lbp_histogram(image[:,:,0]) # y channel
         cb_h = self.lbp_histogram(image[:,:,1]) # cb channel
         cr_h = self.lbp_histogram(image[:,:,2]) # cr channel
-        # print(y_h.shape)
-        # print(cb_h.shape)
-        # print(cr_h.shape)
+        
         
         if (y_h.shape == cb_h.shape == cr_h.shape) :
             feature = np.concatenate((y_h,cb_h,cr_h)).astype(np.float32)
         else:
+            #only few images (1-2) are present with 176 vector
             feature = np.ones((177), dtype=np.float32) 
+            
         label = self.data.iloc[index, 1].astype(np.float32)
         label = np.expand_dims(label, axis=0)
         if label == 1:
