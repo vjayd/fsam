@@ -157,7 +157,7 @@ class Trainer_Resnet(BaseTrainer):
         tp , fp, tn, fn = 0, 0, 0, 0
         spoof = 0
         
-        for i, (img, label, mask, feature) in enumerate(self.trainloader):
+        for i, (img, label, mask, feature) in enumerate(self.testloader):
             img, label, mask, feature = img.to(self.device),  label.to(self.device), mask.to(self.device), feature.to(self.device)
             
             
