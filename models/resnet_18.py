@@ -72,7 +72,7 @@ class Ycbcr(nn.Module):
         feature = self.feature_vec(op)
         classi = self.classi(op)
         
-        return feature, classi
+        return feature, classi, bb.view(-1, 512)
     
     
 class Facenet(nn.Module):

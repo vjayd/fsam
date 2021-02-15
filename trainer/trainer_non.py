@@ -135,13 +135,13 @@ class Trainer_Resnet(BaseTrainer):
             saved_name = os.path.join(self.cfg['output_dir'], '{}_{}.pth'.format(self.cfg['model']['base'], self.cfg['dataset']['name']))
             if os.path.exists(saved_name):
                 self.load_model()
-            self.train_one_epoch(epoch)
+            #self.train_one_epoch(epoch)
             # self.save_model(epoch)
             epoch_acc = self.validate(epoch)
             
             if epoch_acc > self.best_val_acc:
                 self.best_val_acc = epoch_acc
-                self.save_model(epoch)
+                #self.save_model(epoch)
 
 
     def validate(self, epoch):
@@ -161,7 +161,12 @@ class Trainer_Resnet(BaseTrainer):
             img, label, mask, feature = img.to(self.device),  label.to(self.device), mask.to(self.device), feature.to(self.device)
             
             
-            net_feature, net_label = self.network(img)
+            net_feature, net_label, net_feature512 = self.network(img)
+            
+            #Print network learned features of 177 bit
+            print(net_feature512.detach().cpu().numpy())
+            #print groundtruth label
+            print(label)
             ################################################
             spoof+=label.sum().item()
             binary = np.where(net_label.detach().cpu().numpy()<=0.5, 0, 1)
